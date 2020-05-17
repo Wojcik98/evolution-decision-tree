@@ -12,14 +12,14 @@ class EDT:
 
     def __init__(
         self,
-        mi: int = 500,
-        lambda_: int = 300,
+        mi: int = 100,
+        lambda_: int = 30,
         p_split: float = 0.5,
         target_height: int = 9,
-        tournament_k: int = 3,
+        tournament_k: int = 5,
         mutation_prob: float = 0.005,
         max_iter: int = 500,
-        stall_iter: int = 10
+        stall_iter: int = 20
     ):
         self.mi = mi
         self.lambda_ = lambda_ + (lambda_ % 2)  # make it even
@@ -42,7 +42,7 @@ class EDT:
             raise Exception('Model not trained!')
         return self.predict_from_node(self.root, x)
 
-    def fit(self, x: List[list], y: list) -> None:
+    def fit(self, x: List[list], y: list, verbose: bool = False) -> None:
         """Finds decision tree that tries to predict y given x."""
         attributes = len(x[0])
         ranges = []
@@ -73,7 +73,8 @@ class EDT:
                 P.sort(key=lambda tree: tree.value)
                 current_best = P[0]  # TODO argmin
 
-                self.diagnostics(iter, P)
+                if verbose:
+                    self.diagnostics(iter, P)
 
                 if abs(current_best.value - best_val) < EPSILON:
                     stall_iter += 1
