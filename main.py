@@ -1,5 +1,3 @@
-import csv
-
 from edt import EDT
 
 
@@ -12,7 +10,7 @@ def read_seeds():
         for row in file.readlines():
             vals = row.split()
             x.append([float(tmp) for tmp in vals[:7]])
-            y.append(row[7])
+            y.append(vals[7])
 
     return x, y
 
@@ -21,4 +19,4 @@ if __name__ == '__main__':
     x, y = read_seeds()
     tree = EDT()
     tree.fit(x, y)
-    print(tree.eval(x, y))
+    print(f'Accuracy: {100 * (1 - tree.eval(x, y)):.2f}%')

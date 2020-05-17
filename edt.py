@@ -13,13 +13,13 @@ class EDT:
     def __init__(
         self,
         mi: int = 500,
-        lambda_: int = 400,
+        lambda_: int = 300,
         p_split: float = 0.5,
         target_height: int = 9,
-        tournament_k: int = 5,
-        mutation_prob: float = 0.05,
+        tournament_k: int = 3,
+        mutation_prob: float = 0.005,
         max_iter: int = 500,
-        stall_iter: int = 50
+        stall_iter: int = 10
     ):
         self.mi = mi
         self.lambda_ = lambda_ + (lambda_ % 2)  # make it even
@@ -64,28 +64,48 @@ class EDT:
         best_val = current_best.value
 
         while not stop:
-            # TODO diagnostics
-            R = self.select(P)
-            C = self.crossover(R, x, y)
-            O = self.mutation(C, x, y, attributes, ranges, labels)
-            P = self.replace(P, O)
+            try:
+                R = self.select(P)
+                C = self.crossover(R, x, y)
+                O = self.mutation(C, x, y, attributes, ranges, labels)
+                P = self.replace(P, O)
 
-            P.sort(key=lambda tree: tree.value)
-            current_best = P[0]  # TODO argmin
+                P.sort(key=lambda tree: tree.value)
+                current_best = P[0]  # TODO argmin
 
-            if abs(current_best.value - best_val) < EPSILON:
-                stall_iter += 1
-            else:
-                stall_iter = 0
-                best_val = current_best.value
+                self.diagnostics(iter, P)
 
-            mean = sum(tmp.value for tmp in P) / len(P)
-            print(f"Iteration {iter}: best ga value: {best_val:.5f}, best value: {self.eval_from_node(current_best.root, x, y):.5f}, mean: {mean:.3f}")
-            if iter >= self.max_iter or stall_iter >= self.stall_iter:
+                if abs(current_best.value - best_val) < EPSILON:
+                    stall_iter += 1
+                else:
+                    stall_iter = 0
+                    best_val = current_best.value
+
+                if iter >= self.max_iter or stall_iter >= self.stall_iter:
+                    stop = True
+                iter += 1
+            except KeyboardInterrupt:
+                print('User interrupted!')
                 stop = True
-            iter += 1
 
         self.root = current_best.root
+
+    def diagnostics(self, iter: int, P: List[Tree]) -> None:
+        vals = [tmp.value for tmp in P]
+        mean = sum(vals) / len(P)
+        best = min(vals)
+        depths = {tmp.root.height() for tmp in P}
+
+        print(f"[Iteration {iter:02d}] "
+              f"Best ga value: {best:.5f}, "
+              f"Mean: {mean:.3f}, "
+              f"Depths: {sorted(depths)}")
+
+    def verify_values(self, trees: List[Tree], x: List[list], y: list):
+        result = all(
+            abs(tree.value - self.ga_fun(tree.root, x, y)) < 0.01 for tree in
+            trees)
+        print(f'All correct: {result}')
 
     def select(self, P: List[Tree]) -> List[Tree]:
         R = []
@@ -93,17 +113,20 @@ class EDT:
         for _ in range(self.lambda_):
             rank = choices(P, k=self.tournament_k)
             rank.sort(key=lambda tree: tree.value)  # TODO argmin
-            R.append(rank[0])
+            R.append(rank[0].copy())
 
         return R
 
-    def crossover(self, R: List[Tree], x, y) -> List[Tree]:
-        pairs = [(R[i], R[i + 1]) for i in range(int(len(R) / 2))]
+    def crossover(self, R: List[Tree], x: List[list], y: list) -> List[Tree]:
+        R = [tree.copy() for tree in R]
+        pairs = [(R[2 * i], R[2 * i + 1]) for i in range(int(len(R) / 2))]
         C = []
 
         for a, b in pairs:
-            first = get_nth_subnode(a.root, randint(1, a.root.subnodes_count()))
-            second = get_nth_subnode(b.root, randint(1, b.root.subnodes_count()))
+            first = get_nth_subnode(a.root,
+                                    randint(1, a.root.subnodes_count()))
+            second = get_nth_subnode(b.root,
+                                     randint(1, b.root.subnodes_count()))
 
             if first.parent is not None and second.parent is not None:
                 first.parent, second.parent = second.parent, first.parent
@@ -117,14 +140,17 @@ class EDT:
                     second.parent.child_yes = second
                 else:
                     second.parent.child_no = second
+            # TODO rest of cases
 
             C.append(Tree(a.root, self.ga_fun(a.root, x, y)))
             C.append(Tree(b.root, self.ga_fun(b.root, x, y)))
 
         return C
 
-    def mutation(self, C: List[Tree], x, y, attributes: int,
-                     ranges: List[Tuple[float]], labels: list) -> List[Tree]:
+    def mutation(self, C: List[Tree], x: List[list], y: list,
+                 attributes: int, ranges: List[Tuple[float, float]],
+                 labels: list) -> List[Tree]:
+        C = [tree.copy() for tree in C]
         O = []
 
         for tree in C:

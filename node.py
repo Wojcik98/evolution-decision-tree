@@ -11,11 +11,25 @@ class Node:
         self.child_no: Node = None
         self.label = None
 
+    def copy(self):
+        new = Node()
+        new.attribute = self.attribute
+        new.threshold = self.threshold
+        new.label = self.label
+
+        if new.label is None:
+            new.child_yes = self.child_yes.copy()
+            new.child_yes.parent = new
+            new.child_no = self.child_no.copy()
+            new.child_no.parent = new
+
+        return new
+
     def height(self) -> int:
-        if self.label:
+        if self.label is not None:
             return 1
         else:
-            return max(self.child_yes.height(), self.child_no.height())
+            return 1 + max(self.child_yes.height(), self.child_no.height())
 
     def subnodes_count(self) -> int:
         if self.label:
@@ -25,7 +39,7 @@ class Node:
 
 
 def get_nth_subnode(root: Node, n: int) -> Node:
-    tmp: List[Node] = [root]    # TODO rename
+    tmp: List[Node] = [root]  # TODO rename
 
     for _ in range(n):
         cur = tmp.pop()
@@ -37,16 +51,21 @@ def get_nth_subnode(root: Node, n: int) -> Node:
 
 
 def generate_subtree(p_split: float, attributes: int,
-                     ranges: List[Tuple[float]], labels: list) -> Node:
-    # TODO max depth
+                     ranges: List[Tuple[float, float]], labels: list,
+                     depth: int = 1) -> Node:
+    MAX_DEPTH = 100
     node = Node()
-    if random() < p_split:
+
+    if random() < p_split and depth < MAX_DEPTH:
         node.attribute = randrange(attributes)
         node.threshold = uniform(*ranges[node.attribute])
-        node.child_yes = generate_subtree(p_split, attributes, ranges, labels)
+        node.child_yes = generate_subtree(p_split, attributes, ranges, labels,
+                                          depth + 1)
         node.child_yes.parent = node
-        node.child_no = generate_subtree(p_split, attributes, ranges, labels)
+        node.child_no = generate_subtree(p_split, attributes, ranges, labels,
+                                         depth + 1)
         node.child_no.parent = node
     else:
         node.label = choice(labels)
+
     return node
