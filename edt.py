@@ -72,7 +72,7 @@ class EDT:
                 P = self.replace(P, O)
 
                 P.sort(key=lambda tree: tree.value)
-                current_best = P[0]  # TODO argmin
+                current_best = P[0]
 
                 if verbose:
                     self.diagnostics(iter, P)
@@ -114,7 +114,7 @@ class EDT:
 
         for _ in range(self.lambda_):
             rank = choices(P, k=self.tournament_k)
-            rank.sort(key=lambda tree: tree.value)  # TODO argmin
+            rank.sort(key=lambda tree: tree.value)
             R.append(rank[0].copy())
 
         return R
@@ -130,24 +130,47 @@ class EDT:
             second = get_nth_subnode(b.root,
                                      randint(1, b.root.subnodes_count()))
 
-            if first.parent is not None and second.parent is not None:
-                first.parent, second.parent = second.parent, first.parent
-
-                if second is first.parent.child_yes:
-                    first.parent.child_yes = first
-                else:
-                    first.parent.child_no = first
-
-                if first is second.parent.child_yes:
-                    second.parent.child_yes = second
-                else:
-                    second.parent.child_no = second
-            # TODO rest of cases
+            self.swap(a, first, b, second)
 
             C.append(Tree(a.root, self.ga_fun(a.root, x, y)))
             C.append(Tree(b.root, self.ga_fun(b.root, x, y)))
 
         return C
+
+    def swap(self, a_tree, a_node, b_tree, b_node):
+        if a_node.parent is not None and b_node.parent is not None:
+            a_node.parent, b_node.parent = b_node.parent, a_node.parent
+
+            if b_node is a_node.parent.child_yes:
+                a_node.parent.child_yes = a_node
+            else:
+                a_node.parent.child_no = a_node
+
+            if a_node is b_node.parent.child_yes:
+                b_node.parent.child_yes = b_node
+            else:
+                b_node.parent.child_no = b_node
+        if a_node.parent is None and b_node.parent is not None:
+            a_node.parent, b_node.parent = b_node.parent, a_node.parent
+            # b_node.parent == None
+            if b_node is a_node.parent.child_yes:
+                a_node.parent.child_yes = a_node
+            else:
+                a_node.parent.child_yes = a_node
+
+            a_tree.root = b_node
+        if a_node.parent is not None and b_node.parent is None:
+            a_node.parent, b_node.parent = b_node.parent, a_node.parent
+            # a_node.parent == None
+            if a_node is b_node.parent.child_yes:
+                b_node.parent.child_yes = b_node
+            else:
+                b_node.parent.child_no = b_node
+
+            b_tree.root = a_node
+        if a_node.parent is None and b_node.parent is None:
+            a_tree.root, b_tree.root = b_node, a_node
+
 
     def mutation(self, C: List[Tree], x: np.ndarray, y: np.ndarray,
                  attributes: int, ranges: List[Tuple[float, float]],
