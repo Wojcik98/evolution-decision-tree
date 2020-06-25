@@ -40,7 +40,7 @@ class Node:
 
 
 def get_nth_subnode(root: Node, n: int) -> Node:
-    tmp: List[Node] = [root]  # TODO rename
+    tmp: List[Node] = [root]
 
     for _ in range(n):
         cur = tmp.pop()
