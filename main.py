@@ -1,9 +1,11 @@
+import numpy as np
+from typing import Tuple
+
 from edt import EDT
 from validation import k_fold_cross_validation
-from typing import List, Tuple
 
 
-def read_seeds() -> Tuple[List[list], list]:
+def read_seeds() -> Tuple[np.ndarray, np.ndarray]:
     path = 'datasets/seeds/seeds_dataset.txt'
     x = []
     y = []
@@ -14,7 +16,7 @@ def read_seeds() -> Tuple[List[list], list]:
             x.append([float(tmp) for tmp in vals[:7]])
             y.append(vals[7])
 
-    return x, y
+    return np.array(x), np.array(y)
 
 
 if __name__ == '__main__':

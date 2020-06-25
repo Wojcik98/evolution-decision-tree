@@ -1,30 +1,27 @@
-import itertools
-from random import shuffle
-from typing import List
+import numpy as np
+
+from edt import EDT
 
 
-def k_fold_cross_validation(model, k: int, n: int, x: List[list],
-                            y: list) -> float:
-    pairs = list(zip(x, y))
+def k_fold_cross_validation(model: EDT, n: int, k: int, X: np.ndarray,
+                            y: np.ndarray) -> float:
     total_accuracy = 0.0
 
-    for p in range(k):
-        print(f'Validation iteration: {p + 1}/{k}')
-        shuffle(pairs)
-        subdivisions = list(_split(pairs, n))
+    for o in range(n):
+        print(f'Validation iteration: {o + 1}/{n}')
+        p = np.random.permutation(len(y))
+        X_shuffled, y_shuffled = X[p], y[p]
+        X_batches = np.array_split(X_shuffled, k)
+        y_batches = np.array_split(y_shuffled, k)
 
-        for i in range(n):
-            print(f'    k-fold iteration: {i + 1}/{n}')
-            test = subdivisions[i]
-            train = [tmp for j, tmp in enumerate(subdivisions) if j != i]
-            train = itertools.chain.from_iterable(train)  # flatten
-            x_test, y_test = zip(*test)
-            x_test, y_test = list(x_test), list(y_test)
-            x_train, y_train = zip(*train)
-            x_train, y_train = list(x_train), list(y_train)
+        for i in range(k):
+            print(f'    k-fold iteration: {i + 1}/{k}')
+            X_test, y_test = X_batches[i], y_batches[i]
+            X_train = np.vstack([batch for j, batch in enumerate(X_batches) if j != i])
+            y_train = np.hstack([batch for j, batch in enumerate(y_batches) if j != i])
 
-            model.fit(x_train, y_train)
-            total_accuracy += 1 - model.eval(x_test, y_test)
+            model.fit(X_train, y_train)
+            total_accuracy += 1 - model.eval(X_test, y_test)
 
     return total_accuracy / (n * k)
 

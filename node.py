@@ -1,5 +1,6 @@
 from random import choice, randrange, random, uniform
 from typing import List, Tuple
+import numpy as np
 
 
 class Node:
@@ -51,7 +52,7 @@ def get_nth_subnode(root: Node, n: int) -> Node:
 
 
 def generate_subtree(p_split: float, attributes: int,
-                     ranges: List[Tuple[float, float]], labels: list,
+                     ranges: List[Tuple[float, float]], labels: np.ndarray,
                      depth: int = 1) -> Node:
     MAX_DEPTH = 100
     node = Node()

@@ -1,5 +1,6 @@
 from random import choice, choices, randint, randrange, random, uniform
 from typing import List, Tuple
+import numpy as np
 
 from node import Node, generate_subtree, get_nth_subnode
 from tree import Tree
@@ -32,24 +33,24 @@ class EDT:
 
         self.root: Node = None
 
-    def eval(self, x: List[list], y: list) -> float:
+    def eval(self, x: np.ndarray, y: np.ndarray) -> float:
         """Returns error of prediction of x given true values y."""
         return self.eval_from_node(self.root, x, y)
 
-    def predict(self, x: list):
+    def predict(self, x: np.ndarray):
         """Predicts output for input x."""
         if self.root is None:
             raise Exception('Model not trained!')
         return self.predict_from_node(self.root, x)
 
-    def fit(self, x: List[list], y: list, verbose: bool = False) -> None:
+    def fit(self, x: np.ndarray, y: np.ndarray, verbose: bool = False) -> None:
         """Finds decision tree that tries to predict y given x."""
         attributes = len(x[0])
         ranges = []
         for i in range(attributes):
             vals = [tmp[i] for tmp in x]
             ranges.append((min(vals), max(vals)))
-        labels = list(set(y))
+        labels = np.unique(y)
 
         P = []
         for _ in range(self.mi):
@@ -102,7 +103,7 @@ class EDT:
               f"Mean: {mean:.3f}, "
               f"Depths: {sorted(depths)}")
 
-    def verify_values(self, trees: List[Tree], x: List[list], y: list):
+    def verify_values(self, trees: List[Tree], x: np.ndarray, y: np.ndarray):
         result = all(
             abs(tree.value - self.ga_fun(tree.root, x, y)) < 0.01 for tree in
             trees)
@@ -118,7 +119,7 @@ class EDT:
 
         return R
 
-    def crossover(self, R: List[Tree], x: List[list], y: list) -> List[Tree]:
+    def crossover(self, R: List[Tree], x: np.ndarray, y: np.ndarray) -> List[Tree]:
         R = [tree.copy() for tree in R]
         pairs = [(R[2 * i], R[2 * i + 1]) for i in range(int(len(R) / 2))]
         C = []
@@ -148,7 +149,7 @@ class EDT:
 
         return C
 
-    def mutation(self, C: List[Tree], x: List[list], y: list,
+    def mutation(self, C: List[Tree], x: np.ndarray, y: np.ndarray,
                  attributes: int, ranges: List[Tuple[float, float]],
                  labels: list) -> List[Tree]:
         C = [tree.copy() for tree in C]
@@ -179,7 +180,7 @@ class EDT:
         union.sort(key=lambda tree: tree.value)
         return union[:self.mi]
 
-    def predict_from_node(self, root: Node, x: list):
+    def predict_from_node(self, root: Node, x: np.ndarray):
         node = root
         while node.label is None:
             if x[node.attribute] > node.threshold:
@@ -189,14 +190,14 @@ class EDT:
 
         return node.label
 
-    def eval_from_node(self, root: Node, x: List[list], y: list) -> float:
+    def eval_from_node(self, root: Node, x: np.ndarray, y: np.ndarray) -> float:
         assert len(x) == len(y)
         preds = [self.predict_from_node(root, sample) for sample in x]
         errors = [pred != goal for pred, goal in zip(preds, y)]
 
         return sum(errors) / len(errors)
 
-    def ga_fun(self, root: Node, x: List[list], y: list) -> float:
+    def ga_fun(self, root: Node, x: np.ndarray, y: np.ndarray) -> float:
         error_factor = 0.99 * self.eval_from_node(root, x, y)
         height_factor = 0.01 * root.height() / self.target_height
         return error_factor + height_factor
