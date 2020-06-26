@@ -1,3 +1,5 @@
+# Autor: Michał Wójcik
+
 from random import uniform, randint
 
 

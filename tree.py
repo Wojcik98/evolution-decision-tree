@@ -1,3 +1,5 @@
+# Autor: Michał Wójcik
+
 from node import Node
 
 

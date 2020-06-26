@@ -1,3 +1,5 @@
+# Autor: Michał Wójcik
+
 import argparse
 import numpy as np
 from typing import Tuple

@@ -1,3 +1,5 @@
+# Autor: Michał Wójcik
+
 import numpy as np
 import random
 from sklearn import tree

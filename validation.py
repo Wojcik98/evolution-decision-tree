@@ -1,3 +1,5 @@
+# Autor: Michał Wójcik
+
 import numpy as np
 
 
