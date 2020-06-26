@@ -171,7 +171,6 @@ class EDT:
         if a_node.parent is None and b_node.parent is None:
             a_tree.root, b_tree.root = b_node, a_node
 
-
     def mutation(self, C: List[Tree], x: np.ndarray, y: np.ndarray,
                  attributes: int, ranges: List[Tuple[float, float]],
                  labels: list) -> List[Tree]:

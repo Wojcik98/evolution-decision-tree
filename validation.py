@@ -1,9 +1,7 @@
 import numpy as np
 
-from edt import EDT
 
-
-def k_fold_cross_validation(model: EDT, n: int, k: int, X: np.ndarray,
+def k_fold_cross_validation(model, n: int, k: int, X: np.ndarray,
                             y: np.ndarray) -> float:
     total_accuracy = 0.0
 
@@ -26,8 +24,3 @@ def k_fold_cross_validation(model: EDT, n: int, k: int, X: np.ndarray,
             total_accuracy += accuracy
 
     return total_accuracy / (n * k)
-
-
-def _split(a, n):
-    k, m = divmod(len(a), n)
-    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
