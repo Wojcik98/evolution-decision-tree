@@ -8,9 +8,11 @@ from validation import k_fold_cross_validation
 
 class CartTree(tree.DecisionTreeClassifier):
     def eval(self, X: np.ndarray, y: np.ndarray) -> float:
+        """Returns error on given examples"""
         preds = self.predict(X)
-        errors = [pred == goal for pred, goal in zip(preds, y)]
-        return sum(errors) / len(errors)
+        errors = preds != y
+
+        return errors.sum() / len(errors)
 
 
 if __name__ == '__main__':
