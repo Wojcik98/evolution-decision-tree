@@ -36,13 +36,16 @@ if __name__ == '__main__':
     dataset = parse_args()
     X, y = read_data(dataset)
 
+    mi, lambda_, target_h, tournament_k, mutation_prob = 245, 75, 10, 5, 0.0325
+    print(f'{mi}, {lambda_}, {target_h}, {tournament_k}, {mutation_prob:.4f}')
+
     tree = EDT(
-        mi=400,
-        lambda_=100,
+        mi=mi,
+        lambda_=lambda_,
         p_split=0.5,
-        target_height=9,
-        tournament_k=5,
-        mutation_prob=0.005,
+        target_height=target_h,
+        tournament_k=tournament_k,
+        mutation_prob=mutation_prob,
         max_iter=500,
         stall_iter=100
     )
